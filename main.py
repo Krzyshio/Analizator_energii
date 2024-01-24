@@ -13,6 +13,8 @@ class EnergyMonitorApp(ctk.CTk):
         ctk.set_default_color_theme("blue")
 
         super().__init__(*args, **kwargs)
+        self.geometry("800x480")
+
         self.mcc118_board = mcc118_board
         self.num_samples = 100
         self.scan_rate = 1000.0
