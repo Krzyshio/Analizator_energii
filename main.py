@@ -37,7 +37,6 @@ class EnergyMonitorApp(ctk.CTk):
         channel_label.pack(pady=(10, 0))
 
         self.channel_options = ["Channel 0", "Channel 1", "Channel 2", "Channel 3"]
-
         self.channel_combobox = CTkComboBox(settings_frame, values=self.channel_options)
         self.channel_combobox.set("Channel 0")
         self.channel_combobox.pack(pady=(0, 20))
@@ -57,13 +56,17 @@ class EnergyMonitorApp(ctk.CTk):
         self.rate_value_label.pack()
 
         self.voltage_label = ctk.CTkLabel(display_control_frame, text=self.mean_voltage)
-        self.voltage_label.pack(pady=20)
+        self.voltage_label.configure(font=('default_theme', 40, 'bold'))  # Increase font size for better visibility
+        self.voltage_label.pack(pady=20, expand=True)  # Center this in the frame
 
-        start_button = ctk.CTkButton(display_control_frame, text='Start Measurement', command=self.start_measurement)
-        start_button.pack(pady=10)
+        control_buttons_frame = ctk.CTkFrame(display_control_frame)
+        control_buttons_frame.pack(side='bottom', fill='x', padx=20, pady=20)
 
-        stop_button = ctk.CTkButton(display_control_frame, text='Stop Measurement', command=self.stop_measurement)
-        stop_button.pack(pady=10)
+        start_button = ctk.CTkButton(control_buttons_frame, text='Start Measurement', command=self.start_measurement)
+        start_button.pack(side='left', padx=10, pady=10, expand=True)
+
+        stop_button = ctk.CTkButton(control_buttons_frame, text='Stop Measurement', command=self.stop_measurement)
+        stop_button.pack(side='right', padx=10, pady=10, expand=True)
 
     def update_num_samples(self, value):
         self.num_samples = int(value)
@@ -87,15 +90,15 @@ class EnergyMonitorApp(ctk.CTk):
         self.running = False
         self.mcc118_board.a_in_scan_stop()
         self.mcc118_board.a_in_scan_cleanup()
-        self.mean_voltage.set('0.0')
+        self.mean_voltage = 0.0
 
     def read_data(self):
         if self.running:
-            read_result = self.mcc118_board.a_in_scan_read_numpy(self.num_samples.get(), timeout=5.0)
+            read_result = self.mcc118_board.a_in_scan_read_numpy(self.num_samples, timeout=5.0)
             data = read_result.data
             if data.size > 0:
                 mean_voltage = np.mean(data)
-                self.mean_voltage.set(f"{mean_voltage:.3f} V")
+                self.mean_voltage = mean_voltage
             self.after(100, self.read_data)
 
 
@@ -121,3 +124,4 @@ if __name__ == '__main__':
     app.mainloop()
 
     print("Application closed.")
+
