@@ -31,17 +31,25 @@ class EnergyMonitorApp(ctk.CTk):
         display_control_frame = ctk.CTkFrame(self)
         display_control_frame.pack(side='right', fill='both', expand=True, padx=20, pady=20)
 
-        # Num samples slider
+        # Settings title
+        settings_title = ctk.CTkLabel(settings_frame, text='Settings', text_font=('default_theme', 30, 'bold'))
+        settings_title.pack(pady=(0, 20))
+
+        # Num samples slider and value label
         samples_label = ctk.CTkLabel(settings_frame, text='Number of Samples')
         samples_label.pack()
         self.samples_slider = ctk.CTkSlider(settings_frame, from_=1, to=1000, command=self.update_num_samples)
         self.samples_slider.pack()
+        self.samples_value_label = ctk.CTkLabel(settings_frame, text=f'Value: {self.num_samples}')
+        self.samples_value_label.pack()
 
-        # Scan rate slider
+        # Scan rate slider and value label
         rate_label = ctk.CTkLabel(settings_frame, text='Scan Rate (Hz)')
         rate_label.pack()
         self.rate_slider = ctk.CTkSlider(settings_frame, from_=10, to=5000, command=self.update_scan_rate)
         self.rate_slider.pack()
+        self.rate_value_label = ctk.CTkLabel(settings_frame, text=f'Value: {self.scan_rate} Hz')
+        self.rate_value_label.pack()
 
         # Voltage display
         self.voltage_label = ctk.CTkLabel(display_control_frame, text=self.mean_voltage)
@@ -57,9 +65,11 @@ class EnergyMonitorApp(ctk.CTk):
 
     def update_num_samples(self, value):
         self.num_samples = int(value)
+        self.samples_value_label.configure(text=f'Value: {self.num_samples}')
 
     def update_scan_rate(self, value):
-        self.scan_rate = float(value)
+        self.scan_rate = round(float(value), 2)  # Round to 2 decimal places
+        self.rate_value_label.configure(text=f'Value: {self.scan_rate} Hz')
 
     def start_measurement(self):
         self.running = True
