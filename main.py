@@ -37,7 +37,7 @@ class EnergyMonitor:
     def __init__(self):
         self.mode = 0
         self.channel_mask = None
-        self.num_samples = 100
+        self.num_samples = 10000
         self.scan_rate = 1000
         self.running = False
         self.board = self.initialize_board()
@@ -111,13 +111,15 @@ class EnergyMonitor:
             print("A scan is already active.")
             return
 
+        self.running = True
+
         if self.channel_mask is None:
             print("No measurement mode selected.")
             return
-
-        if not (1 <= self.num_samples <= 1000):
-            print("Invalid number of samples. Please set a value between 1 and 1000.")
-            return
+        #
+        # if not (1 <= self.num_samples <= 1000):
+        #     print("Invalid number of samples. Please set a value between 1 and 1000.")
+        #     return
 
         if not (10 <= self.scan_rate <= 5000):
             print("Invalid scan rate. Please set a value between 10 and 5000 Hz.")
@@ -141,28 +143,38 @@ class EnergyMonitor:
             print("Measurement is not running, so it cannot be stopped.")
 
     def read_data(self):
-        if self.running:
-            read_result = self.board.a_in_scan_read_numpy(self.num_samples, timeout=-1)
+        read_request_size = 500  # Define the number of samples to read at a time
+        timeout = 5.0  # Timeout for the read operation
+
+        total_samples_read = 0  # Keep track of the total samples read
+
+        while self.running and total_samples_read < self.num_samples:
+            read_result = self.board.a_in_scan_read_numpy(read_request_size, timeout)
             data = read_result.data
+
+            if read_result.hardware_overrun:
+                print('\nHardware overrun\n')
+                break
+            elif read_result.buffer_overrun:
+                print('\nBuffer overrun\n')
+                break
 
             if data.size > 0:
                 num_channels = 8
                 samples_per_channel = len(data) // num_channels
+                total_samples_read += samples_per_channel
 
-                for channel in range(num_channels):
-                    if not is_channel_visible(channel, self.mode):
-                        continue
+                # Display the last sample for each channel.
+                print('Total Samples Read: ', total_samples_read, end='')
+                if samples_per_channel > 0:
+                    index = samples_per_channel * num_channels - num_channels
+                    for i in range(num_channels):
+                        if is_channel_visible(i, self.mode):
+                            print('    Channel', i, ':', '{:.5f} V'.format(data[index + i]), end=' ')
+                    print()
 
-                    urms, upk, cf = calculate_channel_data(data, channel, samples_per_channel)
-                    self.app.channel_data_labels[channel]['Urms'].configure(text=f'{urms:.2f} V')
-                    self.app.channel_data_labels[channel]['Upk'].configure(text=f'{upk:.2f} V')
-                    self.app.channel_data_labels[channel]['CF'].configure(text=f'{cf:.2f}')
-        else:
-            for channel in range(8):
-                for text in ['Urms', 'Upk', 'CF']:
-                    self.app.channel_data_labels[channel][text].configure(text='0.0')
-
-        self.app.after(100, self.read_data)
+        if self.running:
+            self.stop_measurement()
 
 
 if __name__ == '__main__':
