@@ -33,7 +33,6 @@ class EnergyMonitorAppGUI(ctk.CTk):
 
         self.setup_gui()
 
-
     def setup_gui(self):
         self.title('Energy Monitor')
 
@@ -84,15 +83,13 @@ class EnergyMonitorAppGUI(ctk.CTk):
             header_label = ctk.CTkLabel(self.channel_data_frame, text=text)
             header_label.grid(row=0, column=idx, padx=5, pady=5)
 
-        for idx, text in enumerate(['Urms', 'Upk', 'CF']):
-            label = ctk.CTkLabel(self.channel_data_frame, text=text)
-            label.grid(row=idx + 1, column=0)
+        voltage_label = ctk.CTkLabel(self.channel_data_frame, text='Voltage (V)')
+        voltage_label.grid(row=1, column=0)
 
         for channel in range(8):
-            for idx, text in enumerate(['Urms', 'Upk', 'CF']):
-                value_label = ctk.CTkLabel(self.channel_data_frame, text='0.0', anchor='center')
-                value_label.grid(row=idx + 1, column=channel + 1, padx=5, sticky='w')
-                self.channel_data_labels[channel][text] = value_label
+            value_label = ctk.CTkLabel(self.channel_data_frame, text='0.0', anchor='center')
+            value_label.grid(row=1, column=channel + 1, padx=5, sticky='w')
+            self.channel_data_labels[channel]['Voltage'] = value_label
 
         control_buttons_frame = ctk.CTkFrame(display_control_frame)
         control_buttons_frame.pack(side='bottom', fill='x', padx=20, pady=20)

@@ -17,27 +17,12 @@ def is_channel_visible(channel, mode):
     else:
         return True
 
-
-def calculate_channel_data(data, channel, samples_per_channel):
-    start_idx = channel * samples_per_channel
-    end_idx = (channel + 1) * samples_per_channel
-    channel_data = data[start_idx:end_idx]
-
-    if channel_data.size > 0:
-        urms = np.sqrt(np.mean(np.square(channel_data)))
-        upk = np.max(np.abs(channel_data))
-        cf = upk / urms if urms != 0 else float('nan')
-
-        return urms, upk, cf
-    return 0, 0, 0
-
-
 # Main Class
 class EnergyMonitor:
     def __init__(self):
         self.mode = 0
         self.channel_mask = None
-        self.num_samples = 10000
+        self.num_samples = 5000
         self.scan_rate = 1000
         self.running = False
         self.board = self.initialize_board()
@@ -127,13 +112,14 @@ class EnergyMonitor:
         print(f"Starting measurement with channel mask: {self.channel_mask}")
 
         try:
-            options = OptionFlags.DEFAULT
+            options = OptionFlags.CONTINUOUS
             self.board.a_in_scan_start(self.channel_mask, self.num_samples, self.scan_rate, options)
             self.read_data()
         except ValueError as e:
             print(f"Error starting measurement: {e}")
 
     def stop_measurement(self):
+        print(f"want stop {self.channel_mask}")
         if self.running:
             self.running = False
             self.board.a_in_scan_stop()
@@ -143,10 +129,10 @@ class EnergyMonitor:
             print("Measurement is not running, so it cannot be stopped.")
 
     def read_data(self):
-        read_request_size = 500  # Define the number of samples to read at a time
-        timeout = 5.0  # Timeout for the read operation
+        read_request_size = -1
+        timeout = -1
 
-        total_samples_read = 0  # Keep track of the total samples read
+        total_samples_read = 0
 
         while self.running and total_samples_read < self.num_samples:
             read_result = self.board.a_in_scan_read_numpy(read_request_size, timeout)
@@ -160,21 +146,21 @@ class EnergyMonitor:
                 break
 
             if data.size > 0:
-                num_channels = 8
+                num_channels = bin(self.channel_mask).count('1')
                 samples_per_channel = len(data) // num_channels
                 total_samples_read += samples_per_channel
 
-                # Display the last sample for each channel.
-                print('Total Samples Read: ', total_samples_read, end='')
                 if samples_per_channel > 0:
                     index = samples_per_channel * num_channels - num_channels
                     for i in range(num_channels):
                         if is_channel_visible(i, self.mode):
-                            print('    Channel', i, ':', '{:.5f} V'.format(data[index + i]), end=' ')
+                            voltage = data[index + i]
+                            print('    Channel', i, ':', '{:.5f} V'.format(voltage), end=' ')
+                            self.app.channel_data_labels[i]['Voltage'].configure(text=f'{voltage:.2f} V')
+                            self.app.update()
                     print()
 
-        if self.running:
-            self.stop_measurement()
+        self.stop_measurement()
 
 
 if __name__ == '__main__':
