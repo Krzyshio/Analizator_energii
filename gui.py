@@ -2,6 +2,8 @@ import time
 import tkinter as tk
 import customtkinter as ctk
 
+from constants import VOLTAGE_MODE, CURRENT_MODE, POWER_MODE
+
 
 class EnergyMonitorAppGUI(ctk.CTk):
     def __init__(self, start_measurement, stop_measurement, select_voltage_mode, select_current_mode, select_power_mode,
@@ -32,6 +34,7 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.select_power_mode = select_power_mode
         self.measurement_status_label = None
         self.start_time = None
+        self.measurement_unit_label = None
 
         for channel in range(8):
             self.channel_data_labels[channel] = {}
@@ -104,8 +107,8 @@ class EnergyMonitorAppGUI(ctk.CTk):
             header_label = ctk.CTkLabel(self.channel_data_frame, text=text)
             header_label.grid(row=0, column=idx, padx=5, pady=5)
 
-        voltage_label = ctk.CTkLabel(self.channel_data_frame, text='Voltage (V)')
-        voltage_label.grid(row=1, column=0)
+        self.measurement_unit_label = ctk.CTkLabel(self.channel_data_frame, text='Voltage (V)')
+        self.measurement_unit_label.grid(row=1, column=0)
 
         for channel in range(8):
             value_label = ctk.CTkLabel(self.channel_data_frame, text='0.0', anchor='center')
@@ -137,3 +140,13 @@ class EnergyMonitorAppGUI(ctk.CTk):
     def update_current_multiplier(self, value):
         self.current_multiplier = float(value)
         self.current_multiplier_value_label.configure(text=f'Multiplier: {self.app.current_multiplier:.2f}')
+
+    def update_labels_for_mode(self, mode):
+        label_text = "Voltage (V)"
+        if mode == VOLTAGE_MODE:
+            label_text = "Voltage (V)"
+        elif mode == CURRENT_MODE:
+            label_text = "Current (A)"
+        elif mode == POWER_MODE:
+            label_text = "Power (W)"
+        self.measurement_unit_label.configure(text=label_text)

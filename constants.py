@@ -1,0 +1,5 @@
+# constants.py
+
+VOLTAGE_MODE = 1
+CURRENT_MODE = 2
+POWER_MODE = 3

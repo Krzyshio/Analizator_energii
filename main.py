@@ -2,15 +2,9 @@ import time
 
 from daqhats import mcc118, hat_list, HatIDs, OptionFlags
 from gui import EnergyMonitorAppGUI
-import numpy as np
-
-# Constants
-VOLTAGE_MODE = 1
-CURRENT_MODE = 2
-POWER_MODE = 3
+from constants import VOLTAGE_MODE, CURRENT_MODE, POWER_MODE
 
 
-# Helper Functions
 def is_channel_visible(channel, mode):
     if mode == VOLTAGE_MODE:
         return channel in range(4)
@@ -64,6 +58,7 @@ class EnergyMonitor:
         print(f"Mode selected: {mode}, Channel mask set to: {self.channel_mask}")
 
         self.app.selected_channels_label.configure(text=f'Selected Channels: {mode_text}')
+        self.app.update_labels_for_mode(self.mode)
         self.app.update()
         self.update_channel_display()
 
