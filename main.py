@@ -44,7 +44,9 @@ class EnergyMonitor:
                                    lambda: self.select_mode(CURRENT_MODE),
                                    lambda: self.select_mode(POWER_MODE),
                                    self.update_num_samples,
-                                   self.update_scan_rate)
+                                   self.update_scan_rate,
+                                   self.update_current_multiplier)
+
     def select_mode(self, mode):
         self.mode = mode
         self.channel_mask = {
@@ -91,6 +93,10 @@ class EnergyMonitor:
         self.scan_rate = round(float(value), 2)
         self.app.rate_value_label.configure(text=f'Value: {self.scan_rate} Hz')
 
+    def update_current_multiplier(self, value):
+        self.app.current_multiplier = float(value)
+        self.app.current_multiplier_value_label.configure(text=f'Multiplier: {self.app.current_multiplier:.2f}')
+
     def start_measurement(self):
         if self.running:
             print("A scan is already active.")
@@ -134,33 +140,35 @@ class EnergyMonitor:
 
         total_samples_read = 0
 
+        print("Measurement started...")
+
         while self.running and total_samples_read < self.num_samples:
             read_result = self.board.a_in_scan_read_numpy(read_request_size, timeout)
             data = read_result.data
-
-            if read_result.hardware_overrun:
-                print('\nHardware overrun\n')
-                break
-            elif read_result.buffer_overrun:
-                print('\nBuffer overrun\n')
-                break
 
             if data.size > 0:
                 num_channels = bin(self.channel_mask).count('1')
                 samples_per_channel = len(data) // num_channels
                 total_samples_read += samples_per_channel
 
-                if samples_per_channel > 0:
-                    index = samples_per_channel * num_channels - num_channels
-                    for i in range(num_channels):
-                        if is_channel_visible(i, self.mode):
-                            voltage = data[index + i]
-                            print('    Channel', i, ':', '{:.5f} V'.format(voltage), end=' ')
-                            self.app.channel_data_labels[i]['Voltage'].configure(text=f'{voltage:.2f} V')
-                            self.app.update()
-                    print()
+                print(
+                    f"Data received: {data.size} points, Num channels: {num_channels}, Samples/channel: {samples_per_channel}")
 
+                if samples_per_channel > 0:
+                    for i in range(8):
+                        if (self.channel_mask >> i) & 1:
+                            channel_data_index = (i % num_channels) * samples_per_channel
+                            voltage = data[channel_data_index]
+                            if self.mode == CURRENT_MODE:
+                                current = voltage * self.app.current_multiplier
+                                print(f'    Channel {i} (CURRENT_MODE): {current:.5f} A')
+                                self.app.channel_data_labels[i]['Voltage'].configure(text=f'{current:.2f} A')
+                            else:
+                                print(f'    Channel {i}: {voltage:.5f} V')
+                                self.app.channel_data_labels[i]['Voltage'].configure(text=f'{voltage:.2f} V')
+                            self.app.update()
         self.stop_measurement()
+        print("Measurement stopped.")
 
 
 if __name__ == '__main__':
