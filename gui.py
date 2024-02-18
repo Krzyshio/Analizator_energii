@@ -3,12 +3,16 @@ import customtkinter as ctk
 
 class EnergyMonitorAppGUI(ctk.CTk):
     def __init__(self, start_measurement, stop_measurement, select_voltage_mode, select_current_mode, select_power_mode,
-                 update_num_samples, update_scan_rate, *args, **kwargs):
+                 update_num_samples, update_scan_rate, update_current_multiplier, *args, **kwargs):
         super().__init__()
+        self.update_current_multiplier = update_current_multiplier
+        self.current_multiplier_value_label = None
+        self.current_multiplier = 1.0
         self.channel_data_frame = None
         self.rate_value_label = None
         self.rate_slider = None
         self.samples_slider = None
+        self.current_multiplier_slider = None
         self.samples_value_label = None
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
@@ -56,7 +60,17 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.rate_slider.pack()
         self.rate_value_label = ctk.CTkLabel(settings_frame, text=f'Value: {self.scan_rate} Hz')
         self.rate_value_label.pack()
-
+        
+        multiplier_label = ctk.CTkLabel(settings_frame, text='Current Multiplier')
+        multiplier_label.pack()
+        self.current_multiplier_slider = ctk.CTkSlider(settings_frame, from_=0.1, to=10,
+                                                       command=self.update_current_multiplier)
+        self.current_multiplier_slider.set(self.current_multiplier)
+        self.current_multiplier_slider.pack()
+        self.current_multiplier_value_label = ctk.CTkLabel(settings_frame,
+                                                           text=f'Multiplier: {self.current_multiplier}')
+        self.current_multiplier_value_label.pack()
+        
         display_control_frame = ctk.CTkFrame(self)
         display_control_frame.pack(side='top', fill='both', expand=True, padx=20, pady=20)
 
