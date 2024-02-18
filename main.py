@@ -1,3 +1,5 @@
+import time
+
 from daqhats import mcc118, hat_list, HatIDs, OptionFlags
 from gui import EnergyMonitorAppGUI
 import numpy as np
@@ -45,7 +47,8 @@ class EnergyMonitor:
                                    lambda: self.select_mode(POWER_MODE),
                                    self.update_num_samples,
                                    self.update_scan_rate,
-                                   self.update_current_multiplier)
+                                   self.update_current_multiplier,
+                                   self.running)
 
     def select_mode(self, mode):
         self.mode = mode
@@ -103,6 +106,9 @@ class EnergyMonitor:
             return
 
         self.running = True
+        self.app.measurement_status_label.configure(text='Measurement Status: Active')
+        self.app.start_time = time.time()
+        self.app.update_timer()
 
         if self.channel_mask is None:
             print("No measurement mode selected.")
@@ -125,11 +131,12 @@ class EnergyMonitor:
             print(f"Error starting measurement: {e}")
 
     def stop_measurement(self):
-        print(f"want stop {self.channel_mask}")
         if self.running:
             self.running = False
             self.board.a_in_scan_stop()
             self.board.a_in_scan_cleanup()
+            elapsed_time = time.time() - self.app.start_time
+            self.app.measurement_status_label.configure(text=f'Measurement Finished. Time: {elapsed_time:.2f} sec')
             print(f"Stopping measurement with channel mask: {self.channel_mask}")
         else:
             print("Measurement is not running, so it cannot be stopped.")

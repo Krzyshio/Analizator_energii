@@ -1,9 +1,10 @@
+import time
 import tkinter as tk
 import customtkinter as ctk
 
 class EnergyMonitorAppGUI(ctk.CTk):
     def __init__(self, start_measurement, stop_measurement, select_voltage_mode, select_current_mode, select_power_mode,
-                 update_num_samples, update_scan_rate, update_current_multiplier, *args, **kwargs):
+                 update_num_samples, update_scan_rate, update_current_multiplier, running, *args, **kwargs):
         super().__init__()
         self.update_current_multiplier = update_current_multiplier
         self.current_multiplier_value_label = None
@@ -20,7 +21,7 @@ class EnergyMonitorAppGUI(ctk.CTk):
 
         self.num_samples = 100
         self.scan_rate = 1000.0
-        self.running = False
+        self.running = running
         self.channel_mask = None
         self.channel_data_labels = {}
 
@@ -31,6 +32,8 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.select_power_mode = select_power_mode
         self.update_num_samples = update_num_samples
         self.update_scan_rate = update_scan_rate
+        self.measurement_status_label = None
+        self.start_time = None
 
         for channel in range(8):
             self.channel_data_labels[channel] = {}
@@ -89,6 +92,10 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.selected_channels_label = ctk.CTkLabel(display_control_frame, text='Selected Channels: None')
         self.selected_channels_label.pack(side='top', padx=20, pady=10)
 
+        measurement_status_label = ctk.CTkLabel(display_control_frame, text='Measurement Status: Idle')
+        measurement_status_label.pack()
+        self.measurement_status_label = measurement_status_label
+
         self.channel_data_frame = ctk.CTkFrame(display_control_frame)
         self.channel_data_frame.pack(side='top', fill='both', expand=True, padx=20, pady=20)
 
@@ -112,3 +119,9 @@ class EnergyMonitorAppGUI(ctk.CTk):
         start_button.pack(side='left', padx=10, pady=10, expand=True)
         stop_button = ctk.CTkButton(control_buttons_frame, text='Stop Measurement', command=self.stop_measurement)
         stop_button.pack(side='right', padx=10, pady=10, expand=True)
+
+    def update_timer(self):
+        if self.running:
+            elapsed_time = time.time() - self.start_time
+            self.measurement_status_label.configure(text=f'Measurement Active. Time: {elapsed_time:.2f} sec')
+            self.after(1000, self.update_timer)
