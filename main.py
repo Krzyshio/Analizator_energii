@@ -19,6 +19,7 @@ def is_channel_visible(channel, mode):
     else:
         return True
 
+
 # Main Class
 class EnergyMonitor:
     def __init__(self):
@@ -45,9 +46,6 @@ class EnergyMonitor:
                                    lambda: self.select_mode(VOLTAGE_MODE),
                                    lambda: self.select_mode(CURRENT_MODE),
                                    lambda: self.select_mode(POWER_MODE),
-                                   self.update_num_samples,
-                                   self.update_scan_rate,
-                                   self.update_current_multiplier,
                                    self.running)
 
     def select_mode(self, mode):
@@ -88,18 +86,6 @@ class EnergyMonitor:
                     label.grid_remove()
         self.app.update()
 
-    def update_num_samples(self, value):
-        self.num_samples = int(value)
-        self.app.samples_value_label.configure(text=f'Value: {self.num_samples}')
-
-    def update_scan_rate(self, value):
-        self.scan_rate = round(float(value), 2)
-        self.app.rate_value_label.configure(text=f'Value: {self.scan_rate} Hz')
-
-    def update_current_multiplier(self, value):
-        self.app.current_multiplier = float(value)
-        self.app.current_multiplier_value_label.configure(text=f'Multiplier: {self.app.current_multiplier:.2f}')
-
     def start_measurement(self):
         if self.running:
             print("A scan is already active.")
@@ -113,10 +99,10 @@ class EnergyMonitor:
         if self.channel_mask is None:
             print("No measurement mode selected.")
             return
-        #
-        # if not (1 <= self.num_samples <= 1000):
-        #     print("Invalid number of samples. Please set a value between 1 and 1000.")
-        #     return
+
+        if not (1 <= self.num_samples <= 1000):
+            print("Invalid number of samples. Please set a value between 1 and 1000.")
+            return
 
         if not (10 <= self.scan_rate <= 5000):
             print("Invalid scan rate. Please set a value between 10 and 5000 Hz.")

@@ -2,11 +2,11 @@ import time
 import tkinter as tk
 import customtkinter as ctk
 
+
 class EnergyMonitorAppGUI(ctk.CTk):
     def __init__(self, start_measurement, stop_measurement, select_voltage_mode, select_current_mode, select_power_mode,
-                 update_num_samples, update_scan_rate, update_current_multiplier, running, *args, **kwargs):
+                 running, *args, **kwargs):
         super().__init__()
-        self.update_current_multiplier = update_current_multiplier
         self.current_multiplier_value_label = None
         self.current_multiplier = 1.0
         self.channel_data_frame = None
@@ -30,8 +30,6 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.select_voltage_mode = select_voltage_mode
         self.select_current_mode = select_current_mode
         self.select_power_mode = select_power_mode
-        self.update_num_samples = update_num_samples
-        self.update_scan_rate = update_scan_rate
         self.measurement_status_label = None
         self.start_time = None
 
@@ -63,7 +61,7 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.rate_slider.pack()
         self.rate_value_label = ctk.CTkLabel(settings_frame, text=f'Value: {self.scan_rate} Hz')
         self.rate_value_label.pack()
-        
+
         multiplier_label = ctk.CTkLabel(settings_frame, text='Current Multiplier')
         multiplier_label.pack()
         self.current_multiplier_slider = ctk.CTkSlider(settings_frame, from_=0.1, to=10,
@@ -73,17 +71,19 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.current_multiplier_value_label = ctk.CTkLabel(settings_frame,
                                                            text=f'Multiplier: {self.current_multiplier}')
         self.current_multiplier_value_label.pack()
-        
+
         display_control_frame = ctk.CTkFrame(self)
         display_control_frame.pack(side='top', fill='both', expand=True, padx=20, pady=20)
 
         mode_buttons_frame = ctk.CTkFrame(display_control_frame)
         mode_buttons_frame.pack(side='top', fill='x', padx=20, pady=10)
 
-        voltage_button = ctk.CTkButton(mode_buttons_frame, text='Measure Voltage', command=lambda: self.select_voltage_mode())
+        voltage_button = ctk.CTkButton(mode_buttons_frame, text='Measure Voltage',
+                                       command=lambda: self.select_voltage_mode())
         voltage_button.pack(side='left', padx=10, pady=10, expand=True)
 
-        current_button = ctk.CTkButton(mode_buttons_frame, text='Measure Current', command=lambda: self.select_current_mode())
+        current_button = ctk.CTkButton(mode_buttons_frame, text='Measure Current',
+                                       command=lambda: self.select_current_mode())
         current_button.pack(side='left', padx=10, pady=10, expand=True)
 
         power_button = ctk.CTkButton(mode_buttons_frame, text='Measure Power', command=lambda: self.select_power_mode())
@@ -125,3 +125,15 @@ class EnergyMonitorAppGUI(ctk.CTk):
             elapsed_time = time.time() - self.start_time
             self.measurement_status_label.configure(text=f'Measurement Active. Time: {elapsed_time:.2f} sec')
             self.after(1000, self.update_timer)
+
+    def update_num_samples(self, value):
+        self.num_samples = int(value)
+        self.samples_value_label.configure(text=f'Value: {self.num_samples}')
+
+    def update_scan_rate(self, value):
+        self.scan_rate = round(float(value), 2)
+        self.rate_value_label.configure(text=f'Value: {self.scan_rate} Hz')
+
+    def update_current_multiplier(self, value):
+        self.current_multiplier = float(value)
+        self.current_multiplier_value_label.configure(text=f'Multiplier: {self.app.current_multiplier:.2f}')
