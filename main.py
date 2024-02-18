@@ -95,8 +95,8 @@ class EnergyMonitor:
             print("No measurement mode selected.")
             return
 
-        if not (1 <= self.num_samples <= 1000):
-            print("Invalid number of samples. Please set a value between 1 and 1000.")
+        if not (1 <= self.num_samples <= 10000):
+            print("Invalid number of samples. Please set a value between 1 and 10000.")
             return
 
         if not (10 <= self.scan_rate <= 5000):

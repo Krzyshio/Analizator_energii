@@ -53,7 +53,7 @@ class EnergyMonitorAppGUI(ctk.CTk):
 
         samples_label = ctk.CTkLabel(settings_frame, text='Number of Samples')
         samples_label.pack()
-        self.samples_slider = ctk.CTkSlider(settings_frame, from_=1, to=1000, command=self.update_num_samples)
+        self.samples_slider = ctk.CTkSlider(settings_frame, from_=1, to=10000, command=self.update_num_samples)
         self.samples_slider.pack()
         self.samples_value_label = ctk.CTkLabel(settings_frame, text=f'Value: {self.num_samples}')
         self.samples_value_label.pack()
