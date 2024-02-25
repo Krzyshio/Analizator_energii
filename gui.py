@@ -139,7 +139,7 @@ class EnergyMonitorAppGUI(ctk.CTk):
 
     def update_current_multiplier(self, value):
         self.current_multiplier = float(value)
-        self.current_multiplier_value_label.configure(text=f'Multiplier: {self.app.current_multiplier:.2f}')
+        self.current_multiplier_value_label.configure(text=f'Multiplier: {self.current_multiplier:.2f}')
 
     def update_labels_for_mode(self, mode):
         label_text = "Voltage (V)"

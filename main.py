@@ -10,8 +10,10 @@ def is_channel_visible(channel, mode):
         return channel in range(4)
     elif mode == CURRENT_MODE:
         return channel in range(4, 8)
+    elif mode == POWER_MODE:
+        return channel in [0, 2, 4, 6]
     else:
-        return True
+        return False
 
 
 # Main Class
@@ -74,12 +76,18 @@ class EnergyMonitor:
     def update_channel_display(self):
         for channel in range(8):
             is_visible = is_channel_visible(channel, self.mode)
-            for label in self.app.channel_data_labels[channel].values():
-                if is_visible:
+            if self.mode == POWER_MODE and channel % 2 == 0:
+                if (self.channel_mask >> channel) & 1 and (self.channel_mask >> (channel + 1)) & 1:
+                    label = self.app.channel_data_labels[channel]['Voltage']
                     label.grid()
-                else:
-                    label.grid_remove()
-        self.app.update()
+
+                    self.app.channel_data_labels[channel + 1]['Voltage'].grid_remove()
+            else:
+                for label in self.app.channel_data_labels[channel].values():
+                    if is_visible:
+                        label.grid()
+                    else:
+                        label.grid_remove()
 
     def start_measurement(self):
         if self.running:
@@ -147,14 +155,21 @@ class EnergyMonitor:
                         if (self.channel_mask >> i) & 1:
                             channel_data_index = (i % num_channels) * samples_per_channel
                             voltage = data[channel_data_index]
-                            if self.mode == CURRENT_MODE:
+                            if self.mode == VOLTAGE_MODE:
+                                print(f'    Channel {i}: {voltage:.5f} V')
+                                self.app.channel_data_labels[i]['Voltage'].configure(text=f'{voltage:.2f} V')
+                            elif self.mode == CURRENT_MODE:
                                 current = voltage * self.app.current_multiplier
                                 print(f'    Channel {i} (CURRENT_MODE): {current:.5f} A')
                                 self.app.channel_data_labels[i]['Voltage'].configure(text=f'{current:.2f} A')
-                            else:
-                                print(f'    Channel {i}: {voltage:.5f} V')
-                                self.app.channel_data_labels[i]['Voltage'].configure(text=f'{voltage:.2f} V')
-                            self.app.update()
+                            elif self.mode == POWER_MODE:
+                                current_channel_index = i + 4
+                                current_data_index = (current_channel_index % num_channels) * samples_per_channel
+                                current = data[current_data_index] * self.app.current_multiplier
+                                power = voltage * current
+                                self.app.channel_data_labels[i]['Voltage'].configure(text=f'{power:.2f} W')
+
+                    self.app.update()
         self.stop_measurement()
         print("Measurement stopped.")
 
