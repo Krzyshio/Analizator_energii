@@ -191,7 +191,7 @@ class EnergyMonitor:
                                 power = voltage * current
                                 self.app.channel_data_labels[i]['Voltage'].configure(text=f'{power:.2f} W')
 
-                        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                         readings = [data[i] for i in range(8) if (self.channel_mask >> i) & 1]
                         unit = "V" if self.mode == VOLTAGE_MODE else "A" if self.mode == CURRENT_MODE else "W"
                         self.append_data_to_csv(timestamp, readings, unit)
