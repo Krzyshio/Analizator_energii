@@ -1,4 +1,7 @@
+import csv
+import os
 import time
+from datetime import datetime
 
 from daqhats import mcc118, hat_list, HatIDs, OptionFlags
 from gui import EnergyMonitorAppGUI
@@ -26,6 +29,7 @@ class EnergyMonitor:
         self.running = False
         self.board = self.initialize_board()
         self.app = self.create_app()
+        self.current_file_name = None
 
     def initialize_board(self):
         board_list = hat_list(HatIDs.MCC_118)
@@ -63,6 +67,23 @@ class EnergyMonitor:
         self.app.update_labels_for_mode(self.mode)
         self.app.update()
         self.update_channel_display()
+
+    def get_csv_file_name(self):
+        base_name = datetime.now().strftime("%Y-%m-%d")
+        mode_str = {VOLTAGE_MODE: "voltage", CURRENT_MODE: "current", POWER_MODE: "power"}.get(self.mode, "measurement")
+        file_name = f"{base_name}-{mode_str}"
+        extension = ".csv"
+        final_name = file_name + extension
+        counter = 1
+        while os.path.exists(final_name):
+            final_name = f"{file_name}-{counter}{extension}"
+            counter += 1
+        return final_name
+
+    def append_data_to_csv(self, timestamp, readings, unit):
+        with open(self.current_file_name, 'a', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=';')
+            csvwriter.writerow([timestamp] + readings + [unit])
 
     def select_voltage_mode(self):
         self.select_mode(VOLTAGE_MODE)
@@ -113,6 +134,7 @@ class EnergyMonitor:
         print(f"Starting measurement with channel mask: {self.channel_mask}")
 
         try:
+            self.current_file_name = self.get_csv_file_name()
             options = OptionFlags.CONTINUOUS
             self.board.a_in_scan_start(self.channel_mask, self.num_samples, self.scan_rate, options)
             self.read_data()
@@ -168,6 +190,11 @@ class EnergyMonitor:
                                 current = data[current_data_index] * self.app.current_multiplier
                                 power = voltage * current
                                 self.app.channel_data_labels[i]['Voltage'].configure(text=f'{power:.2f} W')
+
+                        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        readings = [data[i] for i in range(8) if (self.channel_mask >> i) & 1]
+                        unit = "V" if self.mode == VOLTAGE_MODE else "A" if self.mode == CURRENT_MODE else "W"
+                        self.append_data_to_csv(timestamp, readings, unit)
 
                     self.app.update()
         self.stop_measurement()
