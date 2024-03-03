@@ -10,6 +10,7 @@ class EnergyMonitorAppGUI(ctk.CTk):
     def __init__(self, start_measurement, stop_measurement, select_voltage_mode, select_current_mode, select_power_mode,
                  running, *args, **kwargs):
         super().__init__()
+        self.after(100, lambda: self.attributes('-fullscreen', True))
         self.current_multiplier_value_label = None
         self.current_multiplier = 1.0
         self.channel_data_frame = None
@@ -20,7 +21,6 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.samples_value_label = None
         ctk.set_appearance_mode("dark")
         ctk.set_default_color_theme("blue")
-        self.geometry("800x480")
 
         self.num_samples = 100
         self.scan_rate = 1000.0

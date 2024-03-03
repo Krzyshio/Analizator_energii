@@ -7,8 +7,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 class MeasurementDetailsView(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
+        self.after(100, lambda: self.attributes('-fullscreen', True))
         self.title("Measurement Details")
-        self.geometry("800x600")
 
         self.paned_window = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         self.paned_window.pack(fill=tk.BOTH, expand=True)
