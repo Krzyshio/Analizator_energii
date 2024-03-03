@@ -10,7 +10,9 @@ class MeasurementDetailsView(ctk.CTkToplevel):
     def __init__(self, parent):
         super().__init__(parent)
         self.measurements_data = None
+        self.geometry('800x600')
         self.after(100, lambda: self.attributes('-fullscreen', True))
+
         self.title("Measurement Details")
 
         self.main_frame = ctk.CTkFrame(self)
