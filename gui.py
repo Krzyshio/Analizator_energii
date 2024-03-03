@@ -2,6 +2,7 @@ import time
 import tkinter as tk
 import customtkinter as ctk
 
+from MeasurementDetailsView import MeasurementDetailsView
 from constants import VOLTAGE_MODE, CURRENT_MODE, POWER_MODE
 
 
@@ -122,6 +123,9 @@ class EnergyMonitorAppGUI(ctk.CTk):
         start_button.pack(side='left', padx=10, pady=10, expand=True)
         stop_button = ctk.CTkButton(control_buttons_frame, text='Stop Measurement', command=self.stop_measurement)
         stop_button.pack(side='right', padx=10, pady=10, expand=True)
+        details_button = ctk.CTkButton(settings_frame, text='Open Measurement Details',
+                                       command=self.open_measurement_details)
+        details_button.pack(pady=10)
 
     def update_timer(self):
         if self.running:
@@ -150,3 +154,6 @@ class EnergyMonitorAppGUI(ctk.CTk):
         elif mode == POWER_MODE:
             label_text = "Power (W)"
         self.measurement_unit_label.configure(text=label_text)
+
+    def open_measurement_details(self):
+        self.details_view = MeasurementDetailsView(self)
