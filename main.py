@@ -10,11 +10,11 @@ from constants import VOLTAGE_MODE, CURRENT_MODE, POWER_MODE
 
 def is_channel_visible(channel, mode):
     if mode == VOLTAGE_MODE:
-        return channel in range(4)
+        return channel in range(3)
     elif mode == CURRENT_MODE:
-        return channel in range(4, 8)
+        return channel in range(3, 6)
     elif mode == POWER_MODE:
-        return channel in [0, 2, 4, 6]
+        return channel in [0, 2, 4]
     else:
         return False
 
@@ -51,15 +51,15 @@ class EnergyMonitor:
     def select_mode(self, mode):
         self.mode = mode
         self.channel_mask = {
-            VOLTAGE_MODE: 0b00001111,
-            CURRENT_MODE: 0b11110000,
-            POWER_MODE: 0b11111111
+            VOLTAGE_MODE: 0b00000111,
+            CURRENT_MODE: 0b00111000,
+            POWER_MODE: 0b00111111
         }.get(mode, None)
 
         mode_text = {
-            VOLTAGE_MODE: '0 to 3',
-            CURRENT_MODE: '4 to 7',
-            POWER_MODE: '0 to 7'
+            VOLTAGE_MODE: '0 to 2',
+            CURRENT_MODE: '3 to 5',
+            POWER_MODE: '0 to 6'
         }.get(mode, '')
         print(f"Mode selected: {mode}, Channel mask set to: {self.channel_mask}")
 
@@ -185,7 +185,7 @@ class EnergyMonitor:
                                 print(f'    Channel {i} (CURRENT_MODE): {current:.5f} A')
                                 self.app.channel_data_labels[i]['Voltage'].configure(text=f'{current:.2f} A')
                             elif self.mode == POWER_MODE:
-                                current_channel_index = i + 4
+                                current_channel_index = i + 3
                                 current_data_index = (current_channel_index % num_channels) * samples_per_channel
                                 current = data[current_data_index] * self.app.current_multiplier
                                 power = voltage * current
