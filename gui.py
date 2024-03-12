@@ -93,21 +93,17 @@ class EnergyMonitorAppGUI(ctk.CTk):
         display_control_frame.pack(side='top', fill='both', expand=True, padx=20, pady=10)
 
         mode_buttons_frame = ctk.CTkFrame(display_control_frame)
-        mode_buttons_frame.pack(side='top', fill='x', padx=20, pady=10)
+        mode_buttons_frame.pack(side='top', fill='x', padx=10, pady=10)
 
-        voltage_button = ctk.CTkButton(mode_buttons_frame, text='Voltage',
-                                       command=lambda: self.select_voltage_mode())
-        voltage_button.pack(side='left', padx=5, pady=5, expand=True)
-
-        current_button = ctk.CTkButton(mode_buttons_frame, text='Current',
-                                       command=lambda: self.select_current_mode())
-        current_button.pack(side='left', padx=5, pady=5, expand=True)
-
+        voltage_button = ctk.CTkButton(mode_buttons_frame, text='Voltage', command=lambda: self.select_voltage_mode())
+        current_button = ctk.CTkButton(mode_buttons_frame, text='Current', command=lambda: self.select_current_mode())
         power_button = ctk.CTkButton(mode_buttons_frame, text='Power', command=lambda: self.select_power_mode())
-        power_button.pack(side='left', padx=5, pady=5, expand=True)
-
         torque_button = ctk.CTkButton(mode_buttons_frame, text='Torque', command=lambda: self.select_torque_mode())
-        torque_button.pack(side='left', padx=5, pady=5, expand=True)
+
+        voltage_button.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
+        current_button.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        power_button.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
+        torque_button.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
 
         self.selected_channels_label = ctk.CTkLabel(display_control_frame, text='Selected Channels: None')
         self.selected_channels_label.pack(side='top', padx=20, pady=10)
