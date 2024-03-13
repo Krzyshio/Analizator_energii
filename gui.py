@@ -8,14 +8,16 @@ from constants import VOLTAGE_MODE, CURRENT_MODE, POWER_MODE
 
 class EnergyMonitorAppGUI(ctk.CTk):
     def __init__(self, start_measurement, stop_measurement, select_voltage_mode, select_current_mode, select_power_mode,
-                 select_torque_mode, running, *args, **kwargs):
+                 select_torque_mode, select_angular_velocity_mode, running, *args, **kwargs):
 
         super().__init__()
         self.after(100, lambda: self.attributes('-fullscreen', True))
         self.current_multiplier_value_label = None
         self.torque_multiplier_value_label = None
+        self.angular_velocity_value_label = None
         self.current_multiplier = 1.0
         self.torque_multiplier = 1.0
+        self.angular_velocity_multiplier = 1.0
         self.channel_data_frame = None
         self.rate_value_label = None
         self.rate_slider = None
@@ -37,6 +39,7 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.select_current_mode = select_current_mode
         self.select_power_mode = select_power_mode
         self.select_torque_mode = select_torque_mode
+        self.select_angular_velocity_mode = select_angular_velocity_mode
         self.measurement_status_label = None
         self.start_time = None
         self.measurement_unit_label = None
@@ -51,10 +54,6 @@ class EnergyMonitorAppGUI(ctk.CTk):
 
         settings_frame = ctk.CTkFrame(self)
         settings_frame.pack(side='left', fill='y', padx=20, pady=20)
-
-        settings_title = ctk.CTkLabel(settings_frame, text='Settings')
-        settings_title.configure(font=('default_theme', 15, 'bold'))
-        settings_title.pack(pady=(0, 20))
 
         samples_label = ctk.CTkLabel(settings_frame, text='Number of Samples')
         samples_label.pack()
@@ -89,6 +88,15 @@ class EnergyMonitorAppGUI(ctk.CTk):
         self.torque_multiplier_value_label = ctk.CTkLabel(settings_frame, text=f'Multiplier: {self.torque_multiplier}')
         self.torque_multiplier_value_label.pack()
 
+        angular_multiplier_label = ctk.CTkLabel(settings_frame, text='Angular Velocity Multiplier')
+        angular_multiplier_label.pack()
+        self.angular_multiplier_slider = ctk.CTkSlider(settings_frame, from_=0.1, to=10,
+                                                      command=self.update_angular_velocity_multiplier)
+        self.angular_multiplier_slider.set(self.angular_velocity_multiplier)
+        self.angular_multiplier_slider.pack()
+        self.angular_velocity_value_label = ctk.CTkLabel(settings_frame, text=f'Multiplier: {self.angular_velocity_multiplier}')
+        self.angular_velocity_value_label.pack()
+
         display_control_frame = ctk.CTkFrame(self)
         display_control_frame.pack(side='top', fill='both', expand=True, padx=20, pady=10)
 
@@ -99,11 +107,13 @@ class EnergyMonitorAppGUI(ctk.CTk):
         current_button = ctk.CTkButton(mode_buttons_frame, text='Current', command=lambda: self.select_current_mode())
         power_button = ctk.CTkButton(mode_buttons_frame, text='Power', command=lambda: self.select_power_mode())
         torque_button = ctk.CTkButton(mode_buttons_frame, text='Torque', command=lambda: self.select_torque_mode())
+        angular_button = ctk.CTkButton(mode_buttons_frame, text='Angular Velocity', command=lambda: self.select_angular_velocity_mode())
 
         voltage_button.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
         current_button.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         power_button.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
-        torque_button.grid(row=1, column=0, columnspan=3, padx=5, pady=5, sticky="ew")
+        torque_button.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+        angular_button.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
         self.selected_channels_label = ctk.CTkLabel(display_control_frame, text='Selected Channels: None')
         self.selected_channels_label.pack(side='top', padx=20, pady=10)
@@ -160,6 +170,10 @@ class EnergyMonitorAppGUI(ctk.CTk):
     def update_torque_multiplier(self, value):
         self.torque_multiplier = float(value)
         self.torque_multiplier_value_label.configure(text=f'Multiplier: {self.torque_multiplier:.2f}')
+
+    def update_angular_velocity_multiplier(self, value):
+        self.angular_velocity_multiplier = float(value)
+        self.angular_velocity_value_label.configure(text=f'Multiplier: {self.angular_velocity_multiplier:.2f}')
 
     def update_labels_for_mode(self, mode):
         label_text = "Voltage (V)"

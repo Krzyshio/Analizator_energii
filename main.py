@@ -5,7 +5,7 @@ from datetime import datetime
 
 from daqhats import mcc118, hat_list, HatIDs, OptionFlags
 from gui import EnergyMonitorAppGUI
-from constants import VOLTAGE_MODE, CURRENT_MODE, POWER_MODE, TORQUE_MODE
+from constants import VOLTAGE_MODE, CURRENT_MODE, POWER_MODE, TORQUE_MODE, ANGULAR_VELOCITY_MODE
 
 
 def is_channel_visible(channel, mode):
@@ -17,6 +17,8 @@ def is_channel_visible(channel, mode):
         return channel in [0, 2, 4]
     elif mode == TORQUE_MODE:
         return channel == 6
+    elif mode == ANGULAR_VELOCITY_MODE:
+        return channel == 7
     else:
         return False
 
@@ -32,6 +34,8 @@ class EnergyMonitor:
         self.board = self.initialize_board()
         self.app = self.create_app()
         self.current_file_name = None
+        self.measurement_start_time = None
+        self.pulse_count = None
 
     def initialize_board(self):
         board_list = hat_list(HatIDs.MCC_118)
@@ -49,6 +53,7 @@ class EnergyMonitor:
                                    lambda: self.select_mode(CURRENT_MODE),
                                    lambda: self.select_mode(POWER_MODE),
                                    lambda: self.select_mode(TORQUE_MODE),
+                                   lambda: self.select_mode(ANGULAR_VELOCITY_MODE),
                                    self.running)
 
     def select_mode(self, mode):
@@ -57,7 +62,8 @@ class EnergyMonitor:
             VOLTAGE_MODE: 0b00000111,
             CURRENT_MODE: 0b00111000,
             POWER_MODE: 0b00111111,
-            TORQUE_MODE: 0b01000000
+            TORQUE_MODE: 0b01000000,
+            ANGULAR_VELOCITY_MODE: 0b10000000
         }.get(mode, None)
 
         mode_text = {
@@ -65,6 +71,7 @@ class EnergyMonitor:
             CURRENT_MODE: '3 to 5',
             POWER_MODE: '0 to 6',
             TORQUE_MODE: '7',
+            ANGULAR_VELOCITY_MODE: '8'
         }.get(mode, '')
         print(f"Mode selected: {mode}, Channel mask set to: {self.channel_mask}")
 
@@ -79,7 +86,8 @@ class EnergyMonitor:
             VOLTAGE_MODE: "voltage",
             CURRENT_MODE: "current",
             POWER_MODE: "power",
-            TORQUE_MODE: "torque"
+            TORQUE_MODE: "torque",
+            ANGULAR_VELOCITY_MODE: "angular velocity",
         }.get(self.mode, "measurement")
         file_name = f"{base_name}-{mode_str}"
         extension = ".csv"
@@ -94,18 +102,6 @@ class EnergyMonitor:
         with open(self.current_file_name, 'a', newline='') as csvfile:
             csvwriter = csv.writer(csvfile, delimiter=';')
             csvwriter.writerow([timestamp] + readings + [unit])
-
-    def select_voltage_mode(self):
-        self.select_mode(VOLTAGE_MODE)
-
-    def select_current_mode(self):
-        self.select_mode(CURRENT_MODE)
-
-    def select_power_mode(self):
-        self.select_mode(POWER_MODE)
-
-    def select_torque_mode(self):
-        self.select_mode(TORQUE_MODE)
 
     def update_channel_display(self):
         for channel in range(8):
@@ -206,6 +202,25 @@ class EnergyMonitor:
                                 torque = voltage * self.app.torque_multiplier
                                 print(f'    Channel {i} (TORQUE_MODE): {torque:.5f} Nm')
                                 self.app.channel_data_labels[i]['Voltage'].configure(text=f'{torque:.2f} Nm')
+                            elif self.mode == ANGULAR_VELOCITY_MODE:
+                                if self.measurement_start_time is None:
+                                    self.measurement_start_time = time.time()
+                                    self.pulse_count = 0
+
+                                for voltage in data:
+                                    if voltage > 2.5:
+                                        self.pulse_count += 1
+
+                                elapsed_time = time.time() - self.measurement_start_time
+
+                                if elapsed_time >= 1.0:
+                                    angular_velocity = (
+                                                                   self.pulse_count / elapsed_time) * self.app.angular_velocity_multiplier
+                                    print(f' Angular Velocity {angular_velocity:.2f} rad/s')
+                                    self.app.channel_data_labels[i]['Voltage'].configure(text=f'{angular_velocity:.2f} rad/s')
+
+                                    self.measurement_start_time = time.time()
+                                    self.pulse_count = 0
 
                     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                     readings = [data[i] for i in range(8) if (self.channel_mask >> i) & 1]
