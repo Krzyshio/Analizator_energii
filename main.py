@@ -14,7 +14,7 @@ def is_channel_visible(channel, mode):
     elif mode == CURRENT_MODE:
         return channel in range(3, 6)
     elif mode == POWER_MODE:
-        return [0, 1, 2, 7]
+        return True
     elif mode == TORQUE_MODE:
         return channel == 6
     elif mode == ANGULAR_VELOCITY_MODE:
