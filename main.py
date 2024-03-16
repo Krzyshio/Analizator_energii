@@ -14,7 +14,7 @@ def is_channel_visible(channel, mode):
     elif mode == CURRENT_MODE:
         return channel in range(3, 6)
     elif mode == POWER_MODE:
-        return channel in [0, 2, 4]
+        return [0, 1, 2, 7]
     elif mode == TORQUE_MODE:
         return channel == 6
     elif mode == ANGULAR_VELOCITY_MODE:
@@ -36,6 +36,7 @@ class EnergyMonitor:
         self.current_file_name = None
         self.measurement_start_time = None
         self.pulse_count = None
+        self.last_three_powers = []
 
     def initialize_board(self):
         board_list = hat_list(HatIDs.MCC_118)
@@ -193,11 +194,23 @@ class EnergyMonitor:
                                 print(f'    Channel {i} (CURRENT_MODE): {current:.5f} A')
                                 self.app.channel_data_labels[i]['Voltage'].configure(text=f'{current:.2f} A')
                             elif self.mode == POWER_MODE:
-                                current_channel_index = i + 3
-                                current_data_index = (current_channel_index % num_channels) * samples_per_channel
-                                current = data[current_data_index] * self.app.current_multiplier
-                                power = voltage * current
-                                self.app.channel_data_labels[i]['Voltage'].configure(text=f'{power:.2f} W')
+                                power_values = []
+
+                                for index in range(3):
+                                    voltage_channel_index = index
+                                    current_channel_index = index + 3
+                                    voltage_data_index = voltage_channel_index * samples_per_channel
+                                    current_data_index = current_channel_index * samples_per_channel
+                                    voltage = data[voltage_data_index]
+                                    current = data[current_data_index] * self.app.current_multiplier
+                                    power = voltage * current
+                                    power_values.append(power)
+                                    self.app.channel_data_labels[index]['Voltage'].configure(text=f'{power:.2f} W')
+
+                                if power_values:
+                                    average_power = sum(power_values) / len(power_values)
+                                    self.app.channel_data_labels[7]['Voltage'].configure(text=f'{average_power:.2f} W')
+
                             elif self.mode == TORQUE_MODE:
                                 torque = voltage * self.app.torque_multiplier
                                 print(f'    Channel {i} (TORQUE_MODE): {torque:.5f} Nm')
@@ -214,8 +227,7 @@ class EnergyMonitor:
                                 elapsed_time = time.time() - self.measurement_start_time
 
                                 if elapsed_time >= 1.0:
-                                    angular_velocity = (
-                                                                   self.pulse_count / elapsed_time) * self.app.angular_velocity_multiplier
+                                    angular_velocity = (self.pulse_count / elapsed_time) * self.app.angular_velocity_multiplier
                                     print(f' Angular Velocity {angular_velocity:.2f} rad/s')
                                     self.app.channel_data_labels[i]['Voltage'].configure(text=f'{angular_velocity:.2f} rad/s')
 
@@ -230,6 +242,14 @@ class EnergyMonitor:
                 self.app.update()
         self.stop_measurement()
         print("Measurement stopped.")
+
+    def calculate_temp_power(self):
+        if len(self.last_three_powers) >= 3:
+            return sum(self.last_three_powers[-3:]) / 3
+        elif self.last_three_powers:
+            return sum(self.last_three_powers) / len(self.last_three_powers)
+        else:
+            return 0
 
 if __name__ == '__main__':
     energy_monitor = EnergyMonitor()
